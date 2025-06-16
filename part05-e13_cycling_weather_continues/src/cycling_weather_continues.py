@@ -53,10 +53,34 @@ def split_date_continues():
     return df
 
 def cycling_weather_continues(station):
-    pass
+    c_df = split_date_continues()
+    c_df = c_df[c_df["Year"] == 2017]
+    #c_df = 
+    daygroups = c_df.groupby(["Year","Month","Day"]).sum()
+    w_df = pd.read_csv("src/kumpula-weather-2017.csv",sep=",")
+    merged = pd.merge(daygroups,w_df,left_on=["Year","Month","Day"],right_on=["Year","m","d"]).ffill()
+    X = merged.loc[:,
+                   ["Precipitation amount (mm)",
+                   "Snow depth (cm)",
+                   "Air temperature (degC)"]]
+    y = merged.loc[:,station]
+
+    # explain station counts using daily weather data
+    model = linear_model.LinearRegression(fit_intercept=True)
+    model.fit(X,y)
+    r2 = model.score(X,y)
+    # return regression coeffs and score
+
+    return model.coef_,r2
     
 def main():
-    pass
+    station = "Baana"
+    intercept, score = cycling_weather_continues(station)
+    print(f"Measuring station: {station}")
+    print(f"Regression coefficient for variable 'precipitation': {intercept[0]:.1f}")
+    print(f"Regression coefficient for variable 'snow depth': {intercept[1]:.1f}")
+    print(f"Regression coefficient for variable 'temperature': {intercept[2]:.1f}")
+    print(f"Score: {score:.2f}")
 
 if __name__ == "__main__":
     main()
